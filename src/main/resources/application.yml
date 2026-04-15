@@ -1,0 +1,53 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: docutrack-backend
+  datasource:
+    url: jdbc:postgresql://localhost:5432/docutrack
+    username: postgres
+    password: postgres
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+
+app:
+  upload:
+    dir: uploads/documents
+  jwt:
+    # Replace in production via environment variable APP_JWT_SECRET
+    secret: ${APP_JWT_SECRET:change-me-change-me-change-me-change-me}
+    access-token-ttl: 30m
+  gemini:
+    # Set in production via environment variable APP_GEMINI_API_KEY
+    api-key: ${APP_GEMINI_API_KEY:}
+    model: ${APP_GEMINI_MODEL:gemini-2.5-flash}
+  notifications:
+    expiry-cron: ${APP_NOTIFICATIONS_EXPIRY_CRON:0 0 9 * * *}
+    whats-app:
+      enabled: ${APP_WHATSAPP_ENABLED:false}
+      api-base-url: ${APP_WHATSAPP_API_BASE_URL:https://graph.facebook.com/v21.0}
+      access-token: ${APP_WHATSAPP_ACCESS_TOKEN:}
+      phone-number-id: ${APP_WHATSAPP_PHONE_NUMBER_ID:}
+      business-number: ${APP_WHATSAPP_BUSINESS_NUMBER:+918851613806}
+
+logging:
+  level:
+    org.hibernate.SQL: debug
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  paths-to-match: /api/**
+  swagger-ui:
+    persist-authorization: true
+
