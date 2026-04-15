@@ -4,10 +4,8 @@ server:
 spring:
   application:
     name: docutrack-backend
-  datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/docutrack}
-    username: ${SPRING_DATASOURCE_USERNAME:postgres}
-    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+  profiles:
+    active: prod
   flyway:
     enabled: true
     baseline-on-migrate: true
@@ -23,14 +21,6 @@ spring:
 app:
   upload:
     dir: uploads/documents
-  jwt:
-    # Replace in production via environment variable APP_JWT_SECRET
-    secret: ${APP_JWT_SECRET:}
-    access-token-ttl: 30m
-  gemini:
-    # Set in production via environment variable APP_GEMINI_API_KEY
-    api-key: ${APP_GEMINI_API_KEY:}
-    model: ${APP_GEMINI_MODEL:gemini-2.5-flash}
   notifications:
     expiry-cron: ${APP_NOTIFICATIONS_EXPIRY_CRON:0 0 9 * * *}
     whats-app:

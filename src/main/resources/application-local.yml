@@ -1,0 +1,13 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/docutrack
+    username: postgres
+    password: postgres
+
+app:
+  jwt:
+    secret: 03RETRrrGZlT8KVIxsC18PoMaWILzAr7LnEa8gNOAaIQjCwon5qgMU27a4QvoOPTG25z5tfJTMw/rOphTbRpXg==
+    access-token-ttl: 30m
+  gemini:
+    api-key: AIzaSyAMOg7dYdjF1bmcanikzl6op6l_DCDYSvc
+    model: gemini-2.5-flash

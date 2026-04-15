@@ -1,0 +1,16 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://dpg-d7fq4qs71suc73bgp0og-a:5432/doctracker
+    username: doctracker
+    password: ZasVdMNSqtAym6ATfjKHG6v8ywdvBzNh
+    hikari:
+      data-source-properties:
+        sslmode: require
+
+app:
+  jwt:
+    secret: 03RETRrrGZlT8KVIxsC18PoMaWILzAr7LnEa8gNOAaIQjCwon5qgMU27a4QvoOPTG25z5tfJTMw/rOphTbRpXg==
+    access-token-ttl: 30m
+  gemini:
+    api-key: AIzaSyAMOg7dYdjF1bmcanikzl6op6l_DCDYSvc
+    model: gemini-2.5-flash
