@@ -49,3 +49,17 @@ After `verify-otp`, use the returned JWT:
 - Upload: `POST /api/upload` (multipart key: `file`)
 - Files served from: `GET /files/{filename}`
 
+## Deploy on Render
+
+1. Push this repo to GitHub.
+2. In Render, create a new Web Service from this repo.
+3. Runtime can be Docker (`render.yaml` included) or Java.
+4. Set environment variables in Render:
+   - `SPRING_DATASOURCE_URL` = Render Postgres JDBC URL (`jdbc:postgresql://...`)
+   - `SPRING_DATASOURCE_USERNAME` = Render DB user
+   - `SPRING_DATASOURCE_PASSWORD` = Render DB password
+   - `APP_JWT_SECRET` = strong random secret
+   - `APP_GEMINI_API_KEY` = your Gemini API key
+   - `APP_GEMINI_MODEL` = `gemini-2.5-flash`
+5. Deploy. Flyway migrations will run automatically at startup.
+

@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: doctracker-backend
+    runtime: docker
+    plan: free
+    healthCheckPath: /v3/api-docs
+    envVars:
+      - key: SPRING_DATASOURCE_URL
+        sync: false
+      - key: SPRING_DATASOURCE_USERNAME
+        sync: false
+      - key: SPRING_DATASOURCE_PASSWORD
+        sync: false
+      - key: APP_JWT_SECRET
+        sync: false
+      - key: APP_GEMINI_API_KEY
+        sync: false
+      - key: APP_GEMINI_MODEL
+        value: gemini-2.5-flash
+      - key: APP_WHATSAPP_ENABLED
+        value: "false"
