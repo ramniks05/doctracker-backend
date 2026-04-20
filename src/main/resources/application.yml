@@ -4,8 +4,10 @@ server:
 spring:
   application:
     name: docutrack-backend
+  config:
+    import: optional:file:.env[.properties]
   profiles:
-    active: prod
+    active: local
   flyway:
     enabled: true
     baseline-on-migrate: true

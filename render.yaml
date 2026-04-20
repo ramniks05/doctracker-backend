@@ -6,6 +6,8 @@ services:
     healthCheckPath: /v3/api-docs
     envVars:
       - fromGroup: doctracker
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
       - key: APP_GEMINI_MODEL
         value: gemini-2.5-flash
       - key: APP_WHATSAPP_ENABLED
