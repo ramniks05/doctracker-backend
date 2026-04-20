@@ -1,3 +1,9 @@
+server:
+  tomcat:
+    accesslog:
+      enabled: true
+      pattern: '%h %l %u %t "%r" %s %b %D'
+
 spring:
   datasource:
     url: jdbc:postgresql://dpg-d7fq4qs71suc73bgp0og-a:5432/doctracker
@@ -14,3 +20,8 @@ app:
   gemini:
     api-key: ${APP_GEMINI_API_KEY:}
     model: ${APP_GEMINI_MODEL:gemini-2.5-flash}
+
+logging:
+  level:
+    com.docutrack: DEBUG
+    org.springframework.web: INFO
