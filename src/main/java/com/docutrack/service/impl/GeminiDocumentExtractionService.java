@@ -94,7 +94,7 @@ public class GeminiDocumentExtractionService implements DocumentExtractionServic
       HttpResponse<String> resp = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
       if (resp.statusCode() < 200 || resp.statusCode() >= 300) {
         log.error("Gemini error status={} body={}", resp.statusCode(), resp.body());
-        throw new BadRequestException("Extraction failed");
+        throw new BadRequestException(buildGeminiErrorMessage(resp.statusCode(), resp.body()));
       }
 
       JsonNode root = objectMapper.readTree(resp.body());
@@ -121,8 +121,37 @@ public class GeminiDocumentExtractionService implements DocumentExtractionServic
       throw e;
     } catch (Exception e) {
       log.error("Gemini extraction failed for userId={}", userId, e);
-      throw new BadRequestException("Extraction failed");
+      throw new BadRequestException("Extraction failed: " + sanitize(e.getMessage()));
     }
+  }
+
+  private String buildGeminiErrorMessage(int statusCode, String rawBody) {
+    String detail = null;
+    try {
+      JsonNode body = objectMapper.readTree(rawBody);
+      JsonNode error = body.get("error");
+      if (error != null && error.get("message") != null && !error.get("message").asText().isBlank()) {
+        detail = error.get("message").asText();
+      }
+    } catch (Exception ignored) {
+      // Fallback to raw response if JSON parsing fails.
+    }
+
+    String suffix = detail != null ? detail : sanitize(rawBody);
+    if (suffix == null || suffix.isBlank()) {
+      return "Extraction failed (Gemini HTTP " + statusCode + ")";
+    }
+    return "Extraction failed (Gemini HTTP " + statusCode + "): " + suffix;
+  }
+
+  private String sanitize(String input) {
+    if (input == null) return null;
+    String oneLine = input.replaceAll("\\s+", " ").trim();
+    int maxLen = 500;
+    if (oneLine.length() <= maxLen) {
+      return oneLine;
+    }
+    return oneLine.substring(0, maxLen) + "...";
   }
 
   private String extractCandidateText(JsonNode root) {
