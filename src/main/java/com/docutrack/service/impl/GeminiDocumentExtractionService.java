@@ -79,7 +79,7 @@ public class GeminiDocumentExtractionService implements DocumentExtractionServic
           objectMapper.writeValueAsString(base64)
       );
 
-      String model = props.model() == null || props.model().isBlank() ? "gemini-1.5-flash" : props.model().trim();
+      String model = props.model() == null || props.model().isBlank() ? "gemini-2.5-flash-lite" : props.model().trim();
       String url = "https://generativelanguage.googleapis.com/v1beta/models/"
           + URLEncoder.encode(model, StandardCharsets.UTF_8)
           + ":generateContent?key="
