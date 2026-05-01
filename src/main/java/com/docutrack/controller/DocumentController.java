@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/documents")
@@ -54,8 +55,20 @@ public class DocumentController {
   @PostMapping(value = "/extract", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<DocumentExtractResponseDto> extract(
       @AuthenticationPrincipal UserPrincipal principal,
-      @RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
-    return ResponseEntity.ok(documentExtractionService.extract(principal.getUserId(), file));
+      @RequestParam(value = "files", required = false) MultipartFile[] files,
+      @RequestParam(value = "file", required = false) MultipartFile file) {
+
+    java.util.ArrayList<MultipartFile> all = new java.util.ArrayList<>();
+    if (files != null) {
+      for (MultipartFile f : files) {
+        if (f != null && !f.isEmpty()) all.add(f);
+      }
+    }
+    if (all.isEmpty() && file != null && !file.isEmpty()) {
+      all.add(file);
+    }
+
+    return ResponseEntity.ok(documentExtractionService.extract(principal.getUserId(), all));
   }
 
   @GetMapping

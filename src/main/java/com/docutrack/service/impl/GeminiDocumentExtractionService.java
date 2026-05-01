@@ -14,6 +14,7 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.Base64;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,27 +33,48 @@ public class GeminiDocumentExtractionService implements DocumentExtractionServic
   private final HttpClient httpClient = HttpClient.newHttpClient();
 
   @Override
-  public DocumentExtractResponseDto extract(Long userId, MultipartFile file) {
+  public DocumentExtractResponseDto extract(Long userId, List<MultipartFile> files) {
     if (props.apiKey() == null || props.apiKey().isBlank()) {
       throw new BadRequestException("Gemini API key not configured on server");
     }
-    if (file == null || file.isEmpty()) {
-      throw new BadRequestException("file is required");
+    if (files == null || files.isEmpty()) {
+      throw new BadRequestException("files is required");
+    }
+
+    List<MultipartFile> nonEmpty = files.stream()
+        .filter(f -> f != null && !f.isEmpty())
+        .toList();
+    if (nonEmpty.isEmpty()) {
+      throw new BadRequestException("files is required");
+    }
+    if (nonEmpty.size() > 2) {
+      throw new BadRequestException("Maximum 2 images are allowed");
     }
 
     try {
-      String mimeType = file.getContentType() == null ? "image/jpeg" : file.getContentType();
-      String base64 = Base64.getEncoder().encodeToString(file.getBytes());
+      MultipartFile file1 = nonEmpty.get(0);
+      MultipartFile file2 = nonEmpty.size() > 1 ? nonEmpty.get(1) : null;
+
+      String mimeType1 = file1.getContentType() == null ? "image/jpeg" : file1.getContentType();
+      String base64_1 = Base64.getEncoder().encodeToString(file1.getBytes());
+
+      String mimeType2 = null;
+      String base64_2 = null;
+      if (file2 != null) {
+        mimeType2 = file2.getContentType() == null ? "image/jpeg" : file2.getContentType();
+        base64_2 = Base64.getEncoder().encodeToString(file2.getBytes());
+      }
 
       String prompt = """
-          Extract document fields from this purchase/warranty document image.
+          Extract document fields from 1 or 2 purchase/warranty document images.
+          Use ALL images provided together (details may be split across images).
           Return ONLY valid JSON (no markdown) with keys:
           name, brandName, categoryId (number or null),
           purchaseDate (YYYY-MM-DD or null),
           warrantyMonths (integer or null),
           expiryDate (YYYY-MM-DD or null),
           notes (string or null),
-          ocrRawText (string or null).
+          ocrRawText (string or null). If there are two images, ocrRawText should be a merged text.
           If unsure, set null.
           """;
 
@@ -62,7 +84,7 @@ public class GeminiDocumentExtractionService implements DocumentExtractionServic
               "role": "user",
               "parts": [
                 { "text": %s },
-                { "inlineData": { "mimeType": %s, "data": %s } }
+                { "inlineData": { "mimeType": %s, "data": %s } }%s
               ]
             }],
             "generationConfig": {
@@ -73,10 +95,19 @@ public class GeminiDocumentExtractionService implements DocumentExtractionServic
           }
           """;
 
+      String secondPart = "";
+      if (file2 != null) {
+        secondPart = ", { \"inlineData\": { \"mimeType\": %s, \"data\": %s } }".formatted(
+            objectMapper.writeValueAsString(mimeType2),
+            objectMapper.writeValueAsString(base64_2)
+        );
+      }
+
       String jsonBody = body.formatted(
           objectMapper.writeValueAsString(prompt),
-          objectMapper.writeValueAsString(mimeType),
-          objectMapper.writeValueAsString(base64)
+          objectMapper.writeValueAsString(mimeType1),
+          objectMapper.writeValueAsString(base64_1),
+          secondPart
       );
 
       String model = props.model() == null || props.model().isBlank() ? "gemini-2.5-flash-lite" : props.model().trim();
