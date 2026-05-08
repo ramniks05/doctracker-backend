@@ -10,8 +10,8 @@ import org.springframework.web.multipart.MultipartFile;
 @Data
 public class DocumentCreateMultipartRequestDto {
 
-  @NotNull
   private MultipartFile file;
+  private MultipartFile[] files;
 
   @NotBlank
   private String name;

@@ -17,7 +17,10 @@ import com.docutrack.service.DocumentService;
 import com.docutrack.service.FileStorageService;
 import com.docutrack.util.DocumentStatusCalculator;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -33,6 +36,8 @@ public class DocumentServiceImpl implements DocumentService {
   private final CategoryRepository categoryRepository;
   private final DocumentStatusCalculator statusCalculator;
   private final FileStorageService fileStorageService;
+  @Value("${app.public-base-url:}")
+  private String publicBaseUrl;
 
   @Override
   @Transactional
@@ -51,6 +56,7 @@ public class DocumentServiceImpl implements DocumentService {
         .expiryDate(request.getExpiryDate())
         .notes(request.getNotes())
         .imageUrl(request.getImageUrl())
+        .imageUrl2(request.getImageUrl2())
         .status(statusCalculator.calculate(request.getExpiryDate()))
         .build();
 
@@ -81,7 +87,15 @@ public class DocumentServiceImpl implements DocumentService {
       expiryDate = purchaseDate.plusMonths(warrantyMonths);
     }
 
-    String imageUrl = fileStorageService.store(request.getFile());
+    List<org.springframework.web.multipart.MultipartFile> uploadFiles = collectUploadFiles(request);
+    if (uploadFiles.isEmpty()) {
+      throw new BadRequestException("At least one file is required");
+    }
+    if (uploadFiles.size() > 2) {
+      throw new BadRequestException("Maximum 2 files are allowed");
+    }
+    String imageUrl = fileStorageService.store(uploadFiles.get(0));
+    String imageUrl2 = uploadFiles.size() > 1 ? fileStorageService.store(uploadFiles.get(1)) : null;
 
     DocumentEntity entity = DocumentEntity.builder()
         .user(user)
@@ -94,6 +108,7 @@ public class DocumentServiceImpl implements DocumentService {
         .notes(request.getNotes())
         .ocrRawText(request.getOcrRawText())
         .imageUrl(imageUrl)
+        .imageUrl2(imageUrl2)
         .status(statusCalculator.calculate(expiryDate))
         .build();
 
@@ -147,6 +162,7 @@ public class DocumentServiceImpl implements DocumentService {
     entity.setExpiryDate(request.getExpiryDate());
     entity.setNotes(request.getNotes());
     entity.setImageUrl(request.getImageUrl());
+    entity.setImageUrl2(request.getImageUrl2());
     entity.setStatus(statusCalculator.calculate(request.getExpiryDate()));
 
     return toDto(documentRepository.save(entity));
@@ -176,11 +192,49 @@ public class DocumentServiceImpl implements DocumentService {
         .expiryDate(d.getExpiryDate())
         .notes(d.getNotes())
         .ocrRawText(d.getOcrRawText())
-        .imageUrl(d.getImageUrl())
+        .imageUrl(toPublicUrl(d.getImageUrl()))
+        .imageUrl2(toPublicUrl(d.getImageUrl2()))
+        .imageUrls(imageUrls(d))
         .status(d.getStatus())
         .createdAt(d.getCreatedAt())
         .updatedAt(d.getUpdatedAt())
         .build();
+  }
+
+  private List<String> imageUrls(DocumentEntity d) {
+    List<String> urls = new ArrayList<>(2);
+    if (d.getImageUrl() != null && !d.getImageUrl().isBlank()) {
+      urls.add(toPublicUrl(d.getImageUrl()));
+    }
+    if (d.getImageUrl2() != null && !d.getImageUrl2().isBlank()) {
+      urls.add(toPublicUrl(d.getImageUrl2()));
+    }
+    return urls;
+  }
+
+  private List<org.springframework.web.multipart.MultipartFile> collectUploadFiles(DocumentCreateMultipartRequestDto request) {
+    List<org.springframework.web.multipart.MultipartFile> files = new ArrayList<>(2);
+    if (request.getFiles() != null) {
+      for (org.springframework.web.multipart.MultipartFile f : request.getFiles()) {
+        if (f != null && !f.isEmpty()) {
+          files.add(f);
+        }
+      }
+    }
+    if (files.isEmpty() && request.getFile() != null && !request.getFile().isEmpty()) {
+      files.add(request.getFile());
+    }
+    return files;
+  }
+
+  private String toPublicUrl(String imageUrl) {
+    if (imageUrl == null || imageUrl.isBlank()) return imageUrl;
+    if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) return imageUrl;
+    if (publicBaseUrl == null || publicBaseUrl.isBlank()) return imageUrl;
+
+    String base = publicBaseUrl.endsWith("/") ? publicBaseUrl.substring(0, publicBaseUrl.length() - 1) : publicBaseUrl;
+    String path = imageUrl.startsWith("/") ? imageUrl : ("/" + imageUrl);
+    return base + path;
   }
 }
 

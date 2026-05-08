@@ -63,6 +63,9 @@ public class DocumentEntity {
   @Column(length = 1000)
   private String imageUrl;
 
+  @Column(length = 1000)
+  private String imageUrl2;
+
   @Enumerated(EnumType.STRING)
   @Column(nullable = false, length = 30)
   private DocumentStatus status;

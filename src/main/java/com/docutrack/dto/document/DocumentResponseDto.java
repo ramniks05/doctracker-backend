@@ -3,6 +3,7 @@ package com.docutrack.dto.document;
 import com.docutrack.entity.DocumentStatus;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.List;
 import lombok.Builder;
 import lombok.Value;
 
@@ -21,6 +22,8 @@ public class DocumentResponseDto {
   String notes;
   String ocrRawText;
   String imageUrl;
+  String imageUrl2;
+  List<String> imageUrls;
   DocumentStatus status;
   Instant createdAt;
   Instant updatedAt;

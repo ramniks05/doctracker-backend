@@ -12,3 +12,7 @@ services:
         value: gemini-2.5-flash-lite
       - key: APP_WHATSAPP_ENABLED
         value: "false"
+      - key: APP_UPLOAD_DIR
+        value: /var/data
+      - key: APP_PUBLIC_BASE_URL
+        value: https://doctracker-backend.onrender.com

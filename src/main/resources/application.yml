@@ -21,8 +21,9 @@ spring:
     open-in-view: false
 
 app:
+  public-base-url: ${APP_PUBLIC_BASE_URL:}
   upload:
-    dir: uploads/documents
+    dir: ${APP_UPLOAD_DIR:uploads/documents}
   notifications:
     expiry-cron: ${APP_NOTIFICATIONS_EXPIRY_CRON:0 0 9 * * *}
     whats-app:

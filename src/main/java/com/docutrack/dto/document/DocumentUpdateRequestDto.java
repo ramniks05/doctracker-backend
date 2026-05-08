@@ -19,5 +19,6 @@ public class DocumentUpdateRequestDto {
   private LocalDate expiryDate;
   private String notes;
   private String imageUrl;
+  private String imageUrl2;
 }
 
