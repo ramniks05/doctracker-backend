@@ -2,7 +2,7 @@ package com.docutrack.security;
 
 import com.docutrack.dto.app.AppUpgradeRequiredResponse;
 import com.docutrack.entity.AppPlatform;
-import com.docutrack.entity.AppVersionConfigEntity;
+import com.docutrack.config.PlatformVersionConfig;
 import com.docutrack.service.AppVersionService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
@@ -62,13 +62,10 @@ public class AppVersionFilter extends OncePerRequestFilter {
     }
 
     AppPlatform platform = resolvePlatform(request.getHeader(HEADER_PLATFORM));
-    var configOpt = appVersionService.findConfig(platform);
-    if (configOpt.isPresent()) {
-      AppVersionConfigEntity config = configOpt.get();
-      if (appVersionService.isUpdateRequired(config, clientBuild)) {
-        writeUpgradeResponse(response, appVersionService.buildUpgradeRequiredResponse(config));
-        return;
-      }
+    PlatformVersionConfig config = appVersionService.getConfigForPlatform(platform);
+    if (appVersionService.isUpdateRequired(config, clientBuild)) {
+      writeUpgradeResponse(response, appVersionService.buildUpgradeRequiredResponse(config));
+      return;
     }
 
     filterChain.doFilter(request, response);

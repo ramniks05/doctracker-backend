@@ -16,3 +16,12 @@ services:
         value: /var/data
       - key: APP_PUBLIC_BASE_URL
         value: https://doctracker-backend.onrender.com
+      # ExpiryX force-update (change on Render dashboard after store release; no SQL)
+      - key: APP_ANDROID_MIN_BUILD
+        value: "1"
+      - key: APP_ANDROID_LATEST_BUILD
+        value: "9"
+      - key: APP_ANDROID_FORCE_UPDATE
+        value: "false"
+      - key: APP_ANDROID_STORE_URL
+        value: https://play.google.com/store/apps/details?id=com.example.expiryx
