@@ -1,5 +1,6 @@
 package com.docutrack.config;
 
+import com.docutrack.security.AppVersionFilter;
 import com.docutrack.security.JwtAuthFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,7 +17,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
   @Bean
-  public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthFilter jwtAuthFilter) throws Exception {
+  public SecurityFilterChain securityFilterChain(
+      HttpSecurity http, AppVersionFilter appVersionFilter, JwtAuthFilter jwtAuthFilter) throws Exception {
     http
         .csrf(csrf -> csrf.disable())
         .cors(Customizer.withDefaults())
@@ -24,6 +26,8 @@ public class SecurityConfig {
         .authorizeHttpRequests(auth -> auth
             .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
             .requestMatchers(
+                "/api/app/**",
+                "/api/health",
                 "/api/auth/**",
                 "/swagger-ui/**",
                 "/v3/api-docs/**",
@@ -31,6 +35,7 @@ public class SecurityConfig {
             ).permitAll()
             .anyRequest().authenticated()
         )
+        .addFilterBefore(appVersionFilter, UsernamePasswordAuthenticationFilter.class)
         .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
     return http.build();
