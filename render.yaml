@@ -4,6 +4,11 @@ services:
     runtime: docker
     plan: free
     healthCheckPath: /v3/api-docs
+    # Persistent disk: uploads must live here (APP_UPLOAD_DIR). Without this, files are lost on redeploy.
+    disk:
+      name: doctracker-uploads
+      mountPath: /var/data
+      sizeGB: 1
     envVars:
       - fromGroup: doctracker
       - key: SPRING_PROFILES_ACTIVE
