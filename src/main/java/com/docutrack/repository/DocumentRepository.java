@@ -8,6 +8,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface DocumentRepository extends JpaRepository<DocumentEntity, Long>, JpaSpecificationExecutor<DocumentEntity> {
 
@@ -21,5 +23,12 @@ public interface DocumentRepository extends JpaRepository<DocumentEntity, Long>,
       Long userId, Long categoryId, DocumentStatus status, Pageable pageable);
 
   List<DocumentEntity> findAllByExpiryDate(LocalDate expiryDate);
+
+  @Query("""
+      SELECT CASE WHEN COUNT(d) > 0 THEN true ELSE false END
+      FROM DocumentEntity d
+      WHERE d.id <> :excludeId AND (d.imageUrl = :path OR d.imageUrl2 = :path)
+      """)
+  boolean existsOtherDocumentReferencing(@Param("excludeId") Long excludeId, @Param("path") String path);
 }
 

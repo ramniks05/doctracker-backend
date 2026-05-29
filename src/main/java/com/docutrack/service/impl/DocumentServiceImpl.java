@@ -19,6 +19,7 @@ import com.docutrack.util.DocumentStatusCalculator;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -155,6 +156,9 @@ public class DocumentServiceImpl implements DocumentService {
     CategoryEntity category = categoryRepository.findById(request.getCategoryId())
         .orElseThrow(() -> new NotFoundException("Category not found: " + request.getCategoryId()));
 
+    String previousImageUrl = entity.getImageUrl();
+    String previousImageUrl2 = entity.getImageUrl2();
+
     entity.setCategory(category);
     entity.setName(request.getName());
     entity.setBrandName(request.getBrandName());
@@ -165,7 +169,10 @@ public class DocumentServiceImpl implements DocumentService {
     entity.setImageUrl2(request.getImageUrl2());
     entity.setStatus(statusCalculator.calculate(request.getExpiryDate()));
 
-    return toDto(documentRepository.save(entity));
+    DocumentEntity saved = documentRepository.save(entity);
+    deleteReplacedImageIfOrphan(previousImageUrl, request.getImageUrl(), saved.getId());
+    deleteReplacedImageIfOrphan(previousImageUrl2, request.getImageUrl2(), saved.getId());
+    return toDto(saved);
   }
 
   @Override
@@ -176,7 +183,37 @@ public class DocumentServiceImpl implements DocumentService {
     if (!entity.getUser().getId().equals(userId)) {
       throw new NotFoundException("Document not found: " + id);
     }
+    deleteDocumentImagesIfOrphan(entity);
     documentRepository.delete(entity);
+  }
+
+  private void deleteDocumentImagesIfOrphan(DocumentEntity entity) {
+    deleteStoredImageIfOrphan(entity.getImageUrl(), entity.getId());
+    deleteStoredImageIfOrphan(entity.getImageUrl2(), entity.getId());
+  }
+
+  private void deleteReplacedImageIfOrphan(String previousPath, String newPath, Long documentId) {
+    if (!storedPathChanged(previousPath, newPath)) {
+      return;
+    }
+    deleteStoredImageIfOrphan(previousPath, documentId);
+  }
+
+  private void deleteStoredImageIfOrphan(String path, Long excludeDocumentId) {
+    String normalized = fileStorageService.normalizeStoredPath(path);
+    if (normalized == null) {
+      return;
+    }
+    if (documentRepository.existsOtherDocumentReferencing(excludeDocumentId, normalized)) {
+      return;
+    }
+    fileStorageService.deleteLocalFile(normalized);
+  }
+
+  private boolean storedPathChanged(String previousPath, String newPath) {
+    return !Objects.equals(
+        fileStorageService.normalizeStoredPath(previousPath),
+        fileStorageService.normalizeStoredPath(newPath));
   }
 
   private DocumentResponseDto toDto(DocumentEntity d) {
