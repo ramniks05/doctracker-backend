@@ -40,6 +40,9 @@ public class AppVersionFilter extends OncePerRequestFilter {
     if (path.equals("/api/health")) {
       return true;
     }
+    if (path.startsWith("/api/admin/")) {
+      return true;
+    }
     if (HttpMethod.POST.matches(request.getMethod()) && path.equals("/api/auth/send-otp")) {
       return true;
     }

@@ -8,5 +8,8 @@ import lombok.Value;
 public class UserPrincipal {
   Long userId;
   String mobileNumber;
+  String adminUsername;
+  @Builder.Default
+  boolean admin = false;
 }
 

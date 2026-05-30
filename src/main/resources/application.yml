@@ -22,6 +22,8 @@ spring:
 
 app:
   public-base-url: ${APP_PUBLIC_BASE_URL:}
+  admin:
+    access-token-ttl: ${APP_ADMIN_TOKEN_TTL:8h}
   upload:
     dir: ${APP_UPLOAD_DIR:uploads/documents}
   notifications:
