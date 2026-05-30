@@ -15,7 +15,9 @@ public class CorsConfig {
     CorsConfiguration config = new CorsConfiguration();
     config.setAllowedOriginPatterns(List.of(
         "http://localhost:*",
-        "http://127.0.0.1:*"
+        "http://127.0.0.1:*",
+        "https://www.expiryx.app",
+        "https://expiryx.app"
     ));
     config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
     config.setAllowedHeaders(List.of("*"));
